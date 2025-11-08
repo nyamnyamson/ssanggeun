@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let currentRow = 0;
     let cells = [];
-    let emojiCells = []; // [수정됨] 이모지 칸을 저장할 배열 추가
+    let emojiCells = []; 
 
     // 한글 자모 분해 상수 (규칙 적용)
     const CHO = ['ㄱ', 'ㄲ', 'ㄴ', 'ㄷ', 'ㄸ', 'ㄹ', 'ㅁ', 'ㅂ', 'ㅃ', 'ㅅ', 'ㅆ', 'ㅇ', 'ㅈ', 'ㅉ', 'ㅊ', 'ㅋ', 'ㅌ', 'ㅍ', 'ㅎ'];
@@ -28,27 +28,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // 게임판 생성
     function createBoard() {
-        // [수정됨] 한 줄에 4개 요소(글자, 이모지, 글자, 이모지)를 생성
         for (let i = 0; i < MAX_GUESSES; i++) {
-            // 1번 글자 칸
             const cell1 = document.createElement('div');
             cell1.classList.add('cell');
             board.appendChild(cell1);
             cells.push(cell1);
 
-            // 1번 이모지 칸
             const emoji1 = document.createElement('div');
             emoji1.classList.add('emoji-cell');
             board.appendChild(emoji1);
             emojiCells.push(emoji1);
 
-            // 2번 글자 칸
             const cell2 = document.createElement('div');
             cell2.classList.add('cell');
             board.appendChild(cell2);
             cells.push(cell2);
 
-            // 2번 이모지 칸
             const emoji2 = document.createElement('div');
             emoji2.classList.add('emoji-cell');
             board.appendChild(emoji2);
@@ -59,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 한글 글자를 자모 배열로 분해하는 함수
     function getJamos(char) {
         const code = char.charCodeAt(0);
-        if (code < 44032 || code > 55203) return [char]; // 한글이 아님
+        if (code < 44032 || code > 55203) return [char]; 
 
         const charCode = code - 44032;
         const choIdx = Math.floor(charCode / (21 * 28));
@@ -67,14 +62,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const jongIdx = charCode % 28;
 
         let jamos = [];
-        jamos.push(CHO[choIdx]); // 초성
+        jamos.push(CHO[choIdx]); 
 
         const jung = JUNG[jungIdx];
-        jamos.push(...(JAMO_MAP[jung] || [jung])); // 중성 (겹모음 분해)
+        jamos.push(...(JAMO_MAP[jung] || [jung])); 
 
         if (jongIdx > 0) {
             const jong = JONG[jongIdx];
-            jamos.push(...(JAMO_MAP[jong] || [jong])); // 종성 (겹받침 분해)
+            jamos.push(...(JAMO_MAP[jong] || [jong])); 
         }
         return jamos;
     }
@@ -92,7 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return intersection;
     }
 
-    // 힌트 판정 (핵심 로직) - (이 부분은 수정 없음)
+    // 힌트 판정 (핵심 로직)
     function checkGuess(guess) {
         const guessJamos = [getJamos(guess[0]), getJamos(guess[1])];
         const answerJamos = [getJamos(ANSWER[0]), getJamos(ANSWER[1])];
@@ -103,45 +98,55 @@ document.addEventListener('DOMContentLoaded', () => {
         for (let i = 0; i < WORD_LENGTH; i++) {
             const g = guess[i];
             const a = ANSWER[i];
-            const otherA = ANSWER[(i + 1) % 2];
-
+            
             const gJamos = guessJamos[i];
             const aJamos = answerJamos[i];
             const otherAJamos = answerJamos[(i + 1) % 2];
 
             const gCho = gJamos[0];
             const aCho = aJamos[0];
-            const gRest = gJamos.slice(1);
-            const aRest = aJamos.slice(1);
 
             const intersectionWithThis = getIntersectionSize(gJamos, aJamos);
             const intersectionWithOther = getIntersectionSize(gJamos, otherAJamos);
             const intersectionWithAll = getIntersectionSize(gJamos, [...allAnswerJamos]);
-            const restIntersection = getIntersectionSize(gRest, aRest);
 
+            // --- [수정됨] 힌트 판정 순서를 새 규칙에 맞게 변경 ---
+
+            // 1. 당근 (정확히 일치)
             if (g === a) {
                 hints[i] = "carrot";
             }
-            else if (gCho === aCho && restIntersection > 0) {
-                hints[i] = "mushroom";
-            }
+            // 6. 사과 (정답 두 글자 모두에서 일치하는 자모가 없음)
             else if (intersectionWithAll === 0) {
                 hints[i] = "apple";
             }
+            // 5. 바나나 (해당 칸 0개 일치, 반대 칸 1개 이상 일치)
             else if (intersectionWithThis === 0 && intersectionWithOther > 0) {
                 hints[i] = "banana";
             }
-            else if (gCho !== aCho && intersectionWithThis > 0) {
-                hints[i] = "garlic";
-            }
+            // 4. 가지 (해당 칸에 정확히 1개 일치)
             else if (intersectionWithThis === 1) {
                 hints[i] = "eggplant";
             }
+            // 2. 버섯 (해당 칸 2개 이상 일치 + 첫 자음 일치)
+            else if (intersectionWithThis >= 2 && gCho === aCho) {
+                hints[i] = "mushroom";
+            }
+            // 3. 마늘 (해당 칸 2개 이상 일치 + 첫 자음 불일치)
+            else if (intersectionWithThis >= 2 && gCho !== aCho) {
+                hints[i] = "garlic";
+            }
+            // 혹시 모를 예외 처리 (규칙에 맞지 않는 경우, 예: 1개 일치인데 바나나 조건도 만족 등)
+            // 위에서 가지(1개)가 먼저 걸러지므로, 이쪽으로 내려온 intersection > 0 은 사실상 마늘/버섯 조건임
+            // 만약의 경우를 대비해 둠.
             else if (intersectionWithThis > 0) {
-                hints[i] = "garlic"; 
+                 // 1개는 가지에서, 2개 이상은 버섯/마늘에서 걸러져야 함.
+                 // 여기까지 왔다면 논리 오류이거나, '가지'와 조건이 겹친 것이므로 '가지'로 처리.
+                 hints[i] = "eggplant"; 
             }
             else {
-                hints[i] = "apple"; 
+                // '사과'와 '바나나'가 이미 위에서 처리되었어야 함.
+                hints[i] = "apple"; // 최종 안전망
             }
         }
         return hints;
@@ -155,10 +160,10 @@ document.addEventListener('DOMContentLoaded', () => {
             showMessage("두 글자를 입력해야 하오.");
             return;
         }
+        // (나중에 표준어 API 검증을 여기에 추가할 수 있소)
 
         const hints = checkGuess(guess);
 
-        // [새로 추가됨] 힌트 문자열을 이모지로 변환하는 맵
         const hintToEmoji = {
             'carrot': '🥕',
             'mushroom': '🍄',
@@ -168,30 +173,25 @@ document.addEventListener('DOMContentLoaded', () => {
             'apple': '🍎'
         };
 
-        // [수정됨] 글자 칸과 이모지 칸을 동시에 업데이트
         for (let i = 0; i < WORD_LENGTH; i++) {
             const cellIndex = currentRow * WORD_LENGTH + i;
-            const emojiCellIndex = currentRow * WORD_LENGTH + i; // 글자 칸과 이모지 칸의 인덱스는 동일함
+            const emojiCellIndex = currentRow * WORD_LENGTH + i; 
 
-            // 1. 글자 칸 업데이트
             cells[cellIndex].textContent = guess[i];
             cells[cellIndex].classList.add(hints[i]);
             
-            // 2. 이모지 칸 업데이트
-            emojiCells[emojiCellIndex].textContent = hintToEmoji[hints[i]] || ''; // 힌트에 맞는 이모지 삽입
+            emojiCells[emojiCellIndex].textContent = hintToEmoji[hints[i]] || ''; 
         }
 
         currentRow++;
         guessInput.value = "";
 
-        // 승리 판정
         if (hints[0] === 'carrot' && hints[1] === 'carrot') {
             showMessage("🥕 쌍근! 🥕 승리를 축하하오!");
             endGame(true);
             return;
         }
 
-        // 패배 판정
         if (currentRow === MAX_GUESSES) {
             showMessage(`패배... 정답은 [ ${ANSWER} ] 였소. 🐯`);
             endGame(false);
@@ -215,6 +215,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     submitButton.addEventListener('click', handleSubmit);
 
-    // 게임 시작
     createBoard();
 });
