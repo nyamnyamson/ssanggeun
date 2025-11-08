@@ -7,7 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------
     // ✨ 여기에 그대의 사이트 주소를 넣으시오 ✨
     // ----------------------------------------
-    const SITE_URL = "https://nyamnyamson.github.io/ssanggeun-game/"; // <-- 공유할 링크 주소
+    const SITE_URL = "https://nyamnyamson.github.io/ssanggeun/"; // <-- 공유할 링크 주소
 
     const MAX_GUESSES = 7;
     const WORD_LENGTH = 2;
@@ -243,4 +243,5 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createBoard();
 });
+
 
