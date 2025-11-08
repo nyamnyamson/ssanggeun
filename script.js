@@ -2,7 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // ----------------------------------------
     // ✨ 여기에 오늘의 정답을 설정하시오 ✨
     // ----------------------------------------
-    const ANSWER = "하늘"; // <-- 모든 방문자가 풀 동일한 정답
+    const ANSWER = "송민"; // <-- 모든 방문자가 풀 동일한 정답
 
     const MAX_GUESSES = 7;
     const WORD_LENGTH = 2;
@@ -217,3 +217,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
     createBoard();
 });
+
